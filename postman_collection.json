@@ -1,0 +1,365 @@
+{
+	"info": {
+		"_postman_id": "smart-street-light-controller-collection",
+		"name": "Industrial Energy Consumption & Smart Street Light Controller",
+		"description": "Postman API Collection for Municipal Smart Street Light Controller & Energy Consumption Management System",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "1. Master Data",
+			"item": [
+				{
+					"name": "Get Contacts",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/api/contacts",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8080",
+							"path": ["api", "contacts"]
+						}
+					}
+				},
+				{
+					"name": "Create Contact",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Solar Grid Energy Corp\",\n  \"type\": \"VENDOR_UTILITY\",\n  \"email\": \"billing@solargrid.com\",\n  \"phone\": \"+1-800-SOLAR-01\",\n  \"address\": \"500 Renewable Way\"\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8080/api/contacts",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8080",
+							"path": ["api", "contacts"]
+						}
+					}
+				},
+				{
+					"name": "Get Products",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/api/products",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8080",
+							"path": ["api", "products"]
+						}
+					}
+				},
+				{
+					"name": "Get Chart of Accounts",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/api/accounts",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8080",
+							"path": ["api", "accounts"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "2. Telemetry & Smart Dimming Control",
+			"item": [
+				{
+					"name": "Register Street Light Pole",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"poleCode\": \"POLE-704\",\n  \"location\": \"Highway Zone 7 - Junction 4\",\n  \"zoneCode\": \"ZONE-7\",\n  \"dimmingPercentage\": 100,\n  \"powerDrawWatts\": 150.0,\n  \"activeStatus\": \"NIGHT\"\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8080/api/streetlights",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8080",
+							"path": ["api", "streetlights"]
+						}
+					}
+				},
+				{
+					"name": "Get All Street Lights",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/api/streetlights",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8080",
+							"path": ["api", "streetlights"]
+						}
+					}
+				},
+				{
+					"name": "Adjust Dimming Level",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"dimmingPercentage\": 50,\n  \"currentPowerDrawWatts\": 75.0\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8080/api/streetlights/1/dimming",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8080",
+							"path": ["api", "streetlights", "1", "dimming"]
+						}
+					}
+				},
+				{
+					"name": "Ingest Telemetry (Triggers Auto Fault Ticket if 0W)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"streetLightId\": 1,\n  \"ambientLightLux\": 12.5,\n  \"powerDrawWatts\": 0.0,\n  \"dimmingPercentage\": 80\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8080/api/streetlights/telemetry",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8080",
+							"path": ["api", "streetlights", "telemetry"]
+						}
+					}
+				},
+				{
+					"name": "Get Power Consumption Summary",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/api/streetlights/power-summary",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8080",
+							"path": ["api", "streetlights", "power-summary"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "3. Procurement & Utility Billing",
+			"item": [
+				{
+					"name": "Create Utility Purchase Order",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"vendorId\": 1,\n  \"productId\": 2,\n  \"zoneId\": 1,\n  \"quantity\": 5000,\n  \"unitPrice\": 0.15\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8080/api/purchase-orders",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8080",
+							"path": ["api", "purchase-orders"]
+						}
+					}
+				},
+				{
+					"name": "Convert PO to Vendor Bill",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/api/vendor-bills/from-po/1",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8080",
+							"path": ["api", "vendor-bills", "from-po", "1"]
+						}
+					}
+				},
+				{
+					"name": "Pay Vendor Bill via Bank",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/api/payments/vendor-bill/1?bankAccountId=1",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8080",
+							"path": ["api", "payments", "vendor-bill", "1"],
+							"query": [
+								{ "key": "bankAccountId", "value": "1" }
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "4. Customer Municipal Billing",
+			"item": [
+				{
+					"name": "Create Sales Order for Municipality",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"customerId\": 3,\n  \"productId\": 2,\n  \"quantity\": 5000,\n  \"unitPrice\": 0.25\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8080/api/sales-orders",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8080",
+							"path": ["api", "sales-orders"]
+						}
+					}
+				},
+				{
+					"name": "Convert SO to Customer Invoice",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/api/customer-invoices/from-so/1",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8080",
+							"path": ["api", "customer-invoices", "from-so", "1"]
+						}
+					}
+				},
+				{
+					"name": "Register Municipal Payment Receipt",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/api/payments/customer-invoice/1?bankAccountId=1",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8080",
+							"path": ["api", "payments", "customer-invoice", "1"],
+							"query": [
+								{ "key": "bankAccountId", "value": "1" }
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "5. Budgets & Financial Reports",
+			"item": [
+				{
+					"name": "Get Balance Sheet",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/api/reports/balance-sheet",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8080",
+							"path": ["api", "reports", "balance-sheet"]
+						}
+					}
+				},
+				{
+					"name": "Get Profit & Loss Account",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/api/reports/profit-loss",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8080",
+							"path": ["api", "reports", "profit-loss"]
+						}
+					}
+				},
+				{
+					"name": "Get Zone Energy Budget Report",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/api/reports/budget",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8080",
+							"path": ["api", "reports", "budget"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "6. Fault Tickets",
+			"item": [
+				{
+					"name": "Get All Fault Maintenance Tickets",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/api/fault-tickets",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8080",
+							"path": ["api", "fault-tickets"]
+						}
+					}
+				},
+				{
+					"name": "Resolve Fault Ticket",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/api/fault-tickets/1/status?status=RESOLVED",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8080",
+							"path": ["api", "fault-tickets", "1", "status"],
+							"query": [
+								{ "key": "status", "value": "RESOLVED" }
+							]
+						}
+					}
+				}
+			]
+		}
+	]
+}
