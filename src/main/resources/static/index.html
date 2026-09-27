@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LumiGrid | Municipal Smart Lighting & Energy Management</title>
+    <meta name="description" content="Municipal smart lighting grid management system. Ingests telemetry, controls LED dimming, logs automated fault maintenance tickets, and manages municipal energy budgets.">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="app-layout">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="brand">
+                <div class="brand-icon">
+                    <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none">
+                        <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                    </svg>
+                </div>
+                <div class="brand-text">
+                    <span class="brand-title">LumiGrid</span>
+                    <span class="brand-subtitle">Smart Energy & Lighting</span>
+                </div>
+            </div>
+
+            <nav class="nav-menu">
+                <button class="nav-item active" data-tab="tab-overview" id="navOverview">
+                    <span class="nav-icon">📊</span>
+                    <span class="nav-label">Dashboard</span>
+                </button>
+                <button class="nav-item" data-tab="tab-lights" id="navLights">
+                    <span class="nav-icon">💡</span>
+                    <span class="nav-label">Street Lights</span>
+                    <span class="badge" id="badgeTotalLights">0</span>
+                </button>
+                <button class="nav-item" data-tab="tab-tickets" id="navTickets">
+                    <span class="nav-icon">🚨</span>
+                    <span class="nav-label">Fault Tickets</span>
+                    <span class="badge badge-danger" id="badgeOpenTickets">0</span>
+                </button>
+                <button class="nav-item" data-tab="tab-procurement" id="navProcurement">
+                    <span class="nav-icon">⚡</span>
+                    <span class="nav-label">Utility & Procurement</span>
+                </button>
+                <button class="nav-item" data-tab="tab-sales" id="navSales">
+                    <span class="nav-icon">🏛️</span>
+                    <span class="nav-label">Municipal Billing</span>
+                </button>
+                <button class="nav-item" data-tab="tab-budget" id="navBudget">
+                    <span class="nav-icon">📈</span>
+                    <span class="nav-label">Budgets & Accounting</span>
+                </button>
+                <button class="nav-item" data-tab="tab-master" id="navMaster">
+                    <span class="nav-icon">🗂️</span>
+                    <span class="nav-label">Master Data</span>
+                </button>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="system-status-indicator">
+                    <span class="pulse-dot"></span>
+                    <div>
+                        <div class="status-title">Grid Operations Active</div>
+                        <div class="status-details" id="liveTimestamp">Syncing...</div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Top App Bar -->
+            <header class="topbar">
+                <div class="topbar-left">
+                    <h1 class="page-title" id="pageTitle">Grid Overview & Telemetry</h1>
+                    <p class="page-caption" id="pageCaption">Real-time municipal lighting telemetry, automated dimming, and ledger accounting</p>
+                </div>
+                <div class="topbar-right">
+                    <button class="btn btn-secondary" id="btnRefreshData" title="Refresh Live Data">
+                        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none">
+                            <polyline points="23 4 23 10 17 10"></polyline>
+                            <polyline points="1 20 1 14 7 14"></polyline>
+                            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                        </svg>
+                        Refresh Data
+                    </button>
+                    <button class="btn btn-secondary" id="btnSeedDemoData" title="Reload Full Multi-Zone Demo Dataset">
+                        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none">
+                            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                            <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                            <line x1="12" y1="22.08" x2="12" y2="12"></line>
+                        </svg>
+                        Reload Dataset
+                    </button>
+                    <button class="btn btn-primary" id="btnOpenNewPoleModal">
+                        <span>+</span> Register Street Light
+                    </button>
+                </div>
+            </header>
+
+            <!-- Metrics Banner (Always Visible on Top) -->
+            <section class="metrics-grid">
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <span class="metric-label">Total Pole Grid</span>
+                        <span class="metric-icon-wrap icon-cyan">💡</span>
+                    </div>
+                    <div class="metric-value" id="kpiTotalPoles">0</div>
+                    <div class="metric-sub" id="kpiActivePoles">0 active | 0 fault</div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <span class="metric-label">Current Grid Load</span>
+                        <span class="metric-icon-wrap icon-emerald">⚡</span>
+                    </div>
+                    <div class="metric-value" id="kpiCurrentLoad">0.00 <span class="unit">kW</span></div>
+                    <div class="metric-sub" id="kpiAvgDimming">Avg. Dimming: 0%</div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <span class="metric-label">Est. Monthly Power Cost</span>
+                        <span class="metric-icon-wrap icon-amber">💰</span>
+                    </div>
+                    <div class="metric-value" id="kpiMonthlyCost">$0.00</div>
+                    <div class="metric-sub">Based on $0.15/kWh rate</div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <span class="metric-label">Active Fault Tickets</span>
+                        <span class="metric-icon-wrap icon-crimson">🚨</span>
+                    </div>
+                    <div class="metric-value" id="kpiFaultTickets">0</div>
+                    <div class="metric-sub text-danger" id="kpiTicketSub">0 requiring contractor dispatch</div>
+                </div>
+            </section>
+
+            <!-- TAB 1: OVERVIEW & DASHBOARD -->
+            <section class="tab-pane active" id="tab-overview">
+                <!-- Simulation Control Center -->
+                <div class="card glass-card simulation-banner">
+                    <div class="sim-header">
+                        <div class="sim-info">
+                            <h3>🎮 Interactive Grid Simulator</h3>
+                            <p>Inject real-time events to test telemetry ingestion, LED dimming reactions, and automated zero-power fault tickets.</p>
+                        </div>
+                        <div class="sim-actions">
+                            <button class="btn btn-outline" id="btnSimulateLuxNight">
+                                🌙 Simulate Night (10 Lux)
+                            </button>
+                            <button class="btn btn-outline" id="btnSimulateLuxDay">
+                                ☀️ Simulate Day (500 Lux)
+                            </button>
+                            <button class="btn btn-danger-outline" id="btnSimulateFault">
+                                💥 Trigger 0W Power Fault
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dashboard-split">
+                    <!-- Street Lights Quick Monitor -->
+                    <div class="card">
+                        <div class="card-header">
+                            <div>
+                                <h3 class="card-title">Live Street Light Grid Monitor</h3>
+                                <p class="card-subtitle">Showing real-time pole power draw and dimming levels</p>
+                            </div>
+                            <button class="btn btn-sm btn-outline" onclick="switchTab('tab-lights')">View All</button>
+                        </div>
+                        <div class="quick-lights-list" id="overviewQuickLights">
+                            <div class="skeleton-loader">Loading grid poles...</div>
+                        </div>
+                    </div>
+
+                    <!-- Financial & Budget Snapshot -->
+                    <div class="card">
+                        <div class="card-header">
+                            <div>
+                                <h3 class="card-title">Municipal Budget Snapshot</h3>
+                                <p class="card-subtitle">Multi-Zone Energy & Maintenance Variance</p>
+                            </div>
+                            <button class="btn btn-sm btn-outline" onclick="switchTab('tab-budget')">Full Ledgers</button>
+                        </div>
+                        <div id="overviewBudgetSnapshot">
+                            <div class="skeleton-loader">Loading budget metrics...</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 2: STREET LIGHTS MANAGEMENT -->
+            <section class="tab-pane" id="tab-lights">
+                <div class="toolbar">
+                    <div class="toolbar-search">
+                        <input type="text" id="inputSearchLights" placeholder="Search pole code, location, or zone..." class="form-control">
+                    </div>
+                    <div class="toolbar-filters">
+                        <select id="selectFilterStatus" class="form-control">
+                            <option value="ALL">All Statuses</option>
+                            <option value="NORMAL">Normal</option>
+                            <option value="FAULT">Fault (0W Draw)</option>
+                            <option value="OFFLINE">Offline</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="street-lights-grid" id="streetLightsGrid">
+                    <div class="skeleton-loader">Loading street lights...</div>
+                </div>
+            </section>
+
+            <!-- TAB 3: AUTOMATED FAULT TICKETS -->
+            <section class="tab-pane" id="tab-tickets">
+                <div class="card">
+                    <div class="card-header">
+                        <div>
+                            <h3 class="card-title">Automated Fault Maintenance Tickets</h3>
+                            <p class="card-subtitle">Logged automatically by system telemetry whenever a street light pole has 0W draw while active</p>
+                        </div>
+                        <button class="btn btn-secondary btn-sm" id="btnRefreshTickets">Refresh Tickets</button>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Ticket Number</th>
+                                    <th>Pole Code</th>
+                                    <th>Location / Zone</th>
+                                    <th>Issue Description</th>
+                                    <th>Created At</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="ticketsTableBody">
+                                <tr><td colspan="7" class="text-center">Loading fault tickets...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 4: PROCUREMENT & UTILITY BILLING -->
+            <section class="tab-pane" id="tab-procurement">
+                <div class="two-column-grid">
+                    <!-- Create Purchase Order -->
+                    <div class="card">
+                        <div class="card-header">
+                            <div>
+                                <h3 class="card-title">Issue Purchase Order</h3>
+                                <p class="card-subtitle">Procure monthly grid power or repair contractor services</p>
+                            </div>
+                        </div>
+                        <form id="formCreatePO">
+                            <div class="form-group">
+                                <label for="poVendorSelect">Utility Provider / Contractor (Vendor)</label>
+                                <select id="poVendorSelect" class="form-control" required></select>
+                            </div>
+                            <div class="form-group">
+                                <label for="poProductSelect">Product / Service</label>
+                                <select id="poProductSelect" class="form-control" required></select>
+                            </div>
+                            <div class="form-group">
+                                <label for="poZoneSelect">Analytic Lighting Zone</label>
+                                <select id="poZoneSelect" class="form-control" required></select>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="poQuantity">Quantity (kWh / Units)</label>
+                                    <input type="number" id="poQuantity" class="form-control" value="1000" min="1" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="poUnitPrice">Unit Price ($)</label>
+                                    <input type="number" step="0.01" id="poUnitPrice" class="form-control" value="0.15" required>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-primary" id="btnSubmitPO">Create Purchase Order</button>
+                        </form>
+                    </div>
+
+                    <!-- Purchase Orders & Vendor Bills Lists -->
+                    <div class="card">
+                        <div class="card-header">
+                            <div>
+                                <h3 class="card-title">Recent Purchase Orders</h3>
+                                <p class="card-subtitle">Convert POs to Vendor Bills for payment</p>
+                            </div>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>PO Number</th>
+                                        <th>Vendor</th>
+                                        <th>Amount</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="poTableBody">
+                                    <tr><td colspan="4" class="text-center">No Purchase Orders yet</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="card-header mt-4">
+                            <div>
+                                <h3 class="card-title">Vendor Bills & Double-Entry Payment</h3>
+                                <p class="card-subtitle">Pay utility & contractor bills via Bank</p>
+                            </div>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Bill Number</th>
+                                        <th>Vendor</th>
+                                        <th>Amount</th>
+                                        <th>Status</th>
+                                        <th>Payment</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="vendorBillsTableBody">
+                                    <tr><td colspan="5" class="text-center">No Vendor Bills yet</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 5: MUNICIPAL SALES & CUSTOMER INVOICING -->
+            <section class="tab-pane" id="tab-sales">
+                <div class="two-column-grid">
+                    <!-- Create Sales Order -->
+                    <div class="card">
+                        <div class="card-header">
+                            <div>
+                                <h3 class="card-title">Issue Municipal Grid Sales Order</h3>
+                                <p class="card-subtitle">Bill municipal authority for lighting grid operation services</p>
+                            </div>
+                        </div>
+                        <form id="formCreateSO">
+                            <div class="form-group">
+                                <label for="soCustomerSelect">Municipal Client (Customer)</label>
+                                <select id="soCustomerSelect" class="form-control" required></select>
+                            </div>
+                            <div class="form-group">
+                                <label for="soProductSelect">Service Fee Product</label>
+                                <select id="soProductSelect" class="form-control" required></select>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="soQuantity">Billing Units</label>
+                                    <input type="number" id="soQuantity" class="form-control" value="1" min="1" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="soUnitPrice">Rate Amount ($)</label>
+                                    <input type="number" step="0.01" id="soUnitPrice" class="form-control" value="5000.00" required>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-primary" id="btnSubmitSO">Create Sales Order</button>
+                        </form>
+                    </div>
+
+                    <!-- Customer Invoices List -->
+                    <div class="card">
+                        <div class="card-header">
+                            <div>
+                                <h3 class="card-title">Sales Orders & Customer Invoices</h3>
+                                <p class="card-subtitle">Collect municipal payments via bank receipts</p>
+                            </div>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Invoice # / SO #</th>
+                                        <th>Customer</th>
+                                        <th>Amount</th>
+                                        <th>Status</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="salesTableBody">
+                                    <tr><td colspan="5" class="text-center">No sales records yet</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 6: BUDGETS & FINANCIAL REPORTS -->
+            <section class="tab-pane" id="tab-budget">
+                <div class="reports-container">
+                    <!-- Zone Budget Variance Report -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <div>
+                                <h3 class="card-title">Analytic Zone Budget Variance Report</h3>
+                                <p class="card-subtitle">Planned Municipal Energy Budget vs Actual Power & Repair Expenses</p>
+                            </div>
+                            <button class="btn btn-secondary btn-sm" id="btnRefreshBudget">Recalculate Budget</button>
+                        </div>
+                        <div id="budgetReportContent">
+                            <div class="skeleton-loader">Loading budget report...</div>
+                        </div>
+                    </div>
+
+                    <!-- Balance Sheet and Profit & Loss -->
+                    <div class="two-column-grid">
+                        <div class="card">
+                            <div class="card-header">
+                                <h3 class="card-title">Balance Sheet</h3>
+                                <p class="card-subtitle">Assets vs Liabilities & Equity</p>
+                            </div>
+                            <div id="balanceSheetContent">
+                                <div class="skeleton-loader">Generating Balance Sheet...</div>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <div class="card-header">
+                                <h3 class="card-title">Profit & Loss Statement</h3>
+                                <p class="card-subtitle">Municipal Service Fees minus Utility & Maintenance Costs</p>
+                            </div>
+                            <div id="profitLossContent">
+                                <div class="skeleton-loader">Generating Profit & Loss...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 7: MASTER DATA -->
+            <section class="tab-pane" id="tab-master">
+                <div class="master-data-tabs">
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h3 class="card-title">1. Contact Master</h3>
+                            <p class="card-subtitle">Electric Utility Providers, Maintenance Contractors, and Municipal Clients</p>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Contact Type</th>
+                                        <th>Email</th>
+                                        <th>Phone</th>
+                                        <th>Address</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="masterContactsTable"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h3 class="card-title">2. Product & Service Master</h3>
+                            <p class="card-subtitle">Smart LED Pole Assemblies, Grid Electricity kWh, and Repair Services</p>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Code</th>
+                                        <th>Name</th>
+                                        <th>Type</th>
+                                        <th>Unit Price</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="masterProductsTable"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">3. Chart of Accounts (CoA) Master</h3>
+                            <p class="card-subtitle">Assets, Liabilities, Income, and Expenses Double-Entry Accounts</p>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Account Code</th>
+                                        <th>Account Name</th>
+                                        <th>Type</th>
+                                        <th>Current Balance</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="masterAccountsTable"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- MODAL: REGISTER NEW STREET LIGHT POLE -->
+    <div class="modal-backdrop" id="modalNewPole">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Register New Street Light Pole</h3>
+                <button class="modal-close" id="btnCloseNewPoleModal">&times;</button>
+            </div>
+            <form id="formNewPole">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="newPoleCode">Pole Code *</label>
+                        <input type="text" id="newPoleCode" class="form-control" placeholder="e.g. POLE-705" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="newPoleLocation">Physical Location</label>
+                        <input type="text" id="newPoleLocation" class="form-control" placeholder="e.g. Highway Zone 7 - Junction 5">
+                    </div>
+                    <div class="form-group">
+                        <label for="newPoleZone">Grid Zone Code</label>
+                        <input type="text" id="newPoleZone" class="form-control" value="ZONE-7" placeholder="ZONE-7">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="newPoleDimming">Initial Dimming (%)</label>
+                            <input type="number" id="newPoleDimming" class="form-control" value="100" min="0" max="100">
+                        </div>
+                        <div class="form-group">
+                            <label for="newPoleWatts">Power Rating (Watts)</label>
+                            <input type="number" id="newPoleWatts" class="form-control" value="150" min="0">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" id="btnCancelNewPole">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="btnSaveNewPole">Save & Register Pole</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- TOAST NOTIFICATION CONTAINER -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script src="app.js"></script>
+</body>
+</html>
